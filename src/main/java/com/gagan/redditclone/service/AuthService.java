@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import javax.transaction.Transactional;
 
+import com.gagan.redditclone.dto.AuthenticationResponse;
+import com.gagan.redditclone.dto.LoginRequest;
 import com.gagan.redditclone.dto.RegisterRequest;
 import com.gagan.redditclone.exceptions.SpringRedditException;
 import com.gagan.redditclone.model.NotificationEmail;
@@ -13,7 +15,12 @@ import com.gagan.redditclone.model.User;
 import com.gagan.redditclone.model.VerificationToken;
 import com.gagan.redditclone.repository.UserRepository;
 import com.gagan.redditclone.repository.VerificationTokenRepository;
+import com.gagan.redditclone.security.JwtProvider;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +39,12 @@ public class AuthService {
   private final UserRepository userRepository;
   private final VerificationTokenRepository verificationTokenRepository;
   private final MailService mailService;
+  private final AuthenticationManager authenticationManager;
+  private final JwtProvider jwtProvider;
 
+  /**
+   * @Transactional performs Database related error handlonngs
+   */
   @Transactional
   public void signUp(RegisterRequest registerRequest) {
     User user = new User();
@@ -72,6 +84,14 @@ public class AuthService {
         .orElseThrow(() -> new SpringRedditException("User not found with name " + username));
     user.setEnabled(true);
     userRepository.save(user);
+  }
+
+  public AuthenticationResponse login(LoginRequest loginRequest) {
+    Authentication authentication = authenticationManager
+        .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    String token = jwtProvider.generateToken(authentication);
+    return new AuthenticationResponse(loginRequest.getUsername(), token);
   }
 
 }

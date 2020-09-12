@@ -7,6 +7,8 @@
  */
 package com.gagan.redditclone.controller;
 
+import com.gagan.redditclone.dto.AuthenticationResponse;
+import com.gagan.redditclone.dto.LoginRequest;
 import com.gagan.redditclone.dto.RegisterRequest;
 import com.gagan.redditclone.service.AuthService;
 
@@ -38,6 +40,12 @@ public class AuthController {
   public ResponseEntity<String> verifyAccount(@PathVariable String token) {
     authService.verifyAccount(token);
     return new ResponseEntity<>("Account Activated successfully", HttpStatus.OK);
+  }
+
+  @PostMapping("/login")
+  public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
+    AuthenticationResponse response = authService.login(loginRequest);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
 }
