@@ -1,11 +1,13 @@
 package com.gagan.redditclone.service;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.transaction.Transactional;
 
 import com.gagan.redditclone.dto.RegisterRequest;
+import com.gagan.redditclone.exceptions.SpringRedditException;
 import com.gagan.redditclone.model.NotificationEmail;
 import com.gagan.redditclone.model.User;
 import com.gagan.redditclone.model.VerificationToken;
@@ -52,6 +54,24 @@ public class AuthService {
     token.setUser(user);
     verificationTokenRepository.save(token);
     return verificationToken;
+  }
+
+  public void verifyAccount(String token) {
+    Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(token);
+    verificationToken.orElseThrow(() -> new SpringRedditException("Invalid Token"));
+    fetchUserAndEnable(verificationToken.get());
+  }
+
+  /**
+   * Can be called multiple times to verify account
+   */
+  @Transactional
+  private void fetchUserAndEnable(VerificationToken verificationToken) {
+    String username = verificationToken.getUser().getUsername();
+    User user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new SpringRedditException("User not found with name " + username));
+    user.setEnabled(true);
+    userRepository.save(user);
   }
 
 }
