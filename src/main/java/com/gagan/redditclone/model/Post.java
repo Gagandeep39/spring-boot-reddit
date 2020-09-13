@@ -1,8 +1,6 @@
 package com.gagan.redditclone.model;
 
-import com.sun.istack.NotNull;
 import lombok.*;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.lang.Nullable;
 
 import javax.persistence.*;
