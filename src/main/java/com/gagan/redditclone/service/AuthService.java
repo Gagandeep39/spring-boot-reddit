@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.gagan.redditclone.dto.AuthenticationResponse;
 import com.gagan.redditclone.dto.LoginRequest;
+import com.gagan.redditclone.dto.RefreshTokenRequest;
 import com.gagan.redditclone.dto.RegisterRequest;
 import com.gagan.redditclone.exceptions.SpringRedditException;
 import com.gagan.redditclone.model.NotificationEmail;
@@ -15,6 +16,8 @@ import com.gagan.redditclone.repository.UserRepository;
 import com.gagan.redditclone.repository.VerificationTokenRepository;
 import com.gagan.redditclone.security.JwtProvider;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,6 +44,7 @@ public class AuthService {
   private final MailService mailService;
   private final AuthenticationManager authenticationManager;
   private final JwtProvider jwtProvider;
+  private final RefreshTokenService refreshTokenService;
 
   /**
    * @Transactional performs Database related error handlonngs
@@ -78,7 +82,7 @@ public class AuthService {
    * Can be called multiple times to verify account
    */
   @Transactional
-  private void fetchUserAndEnable(VerificationToken verificationToken) {
+  public void fetchUserAndEnable(VerificationToken verificationToken) {
     String username = verificationToken.getUser().getUsername();
     User user = userRepository.findByUsername(username)
         .orElseThrow(() -> new SpringRedditException("User not found with name " + username));
@@ -91,7 +95,12 @@ public class AuthService {
         .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
     SecurityContextHolder.getContext().setAuthentication(authentication);
     String token = jwtProvider.generateToken(authentication);
-    return new AuthenticationResponse(loginRequest.getUsername(), token);
+    return AuthenticationResponse.builder()
+            .authenticationToken(token)
+            .refreshToken(refreshTokenService.generateRefreshToken().getToken())
+            .username(loginRequest.getUsername())
+            .expiresAt(Instant.now().plusMillis(jwtProvider.getExpirationInMillis()))
+            .build();
   }
 
   @Transactional(readOnly = true)
@@ -101,4 +110,20 @@ public class AuthService {
         .orElseThrow(() -> new SpringRedditException("User name not found - " + principal.getUsername().toString()));
   }
 
+  public boolean isLoggedIn() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
+
+  }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+      refreshTokenService.validateRefreshToken(refreshTokenRequest.getRefreshToken());
+      String token = jwtProvider.generateTokenWithUsername(refreshTokenRequest.getUsername());
+      return AuthenticationResponse.builder()
+              .authenticationToken(token)
+              .refreshToken(refreshTokenRequest.getRefreshToken())
+              .expiresAt(Instant.now().plusMillis(jwtProvider.getExpirationInMillis()))
+              .username(refreshTokenRequest.getUsername())
+              .build();
+    }
 }

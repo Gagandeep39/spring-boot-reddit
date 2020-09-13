@@ -16,6 +16,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
@@ -40,7 +42,8 @@ public class JwtProvider {
   public String generateToken(Authentication authentication) {
     log.info(authentication.getPrincipal().getClass().toString());
     UserDetailsImpl principal = (UserDetailsImpl) authentication.getPrincipal();
-    return Jwts.builder().setSubject(principal.getUsername()).signWith(getPrivateKey()).compact();
+    return Jwts.builder().setSubject(principal.getUsername()).signWith(getPrivateKey())
+        .setExpiration(Date.from(Instant.now().plusMillis(jwtExpirationInMillis))).compact();
   }
 
   @PostConstruct
@@ -81,4 +84,12 @@ public class JwtProvider {
     return claims.getSubject();
   }
 
+  public long getExpirationInMillis() {
+    return jwtExpirationInMillis;
+  }
+
+  public String generateTokenWithUsername(String username) {
+    return Jwts.builder().setSubject(username).setIssuedAt(Date.from(Instant.now())).signWith(getPrivateKey())
+        .setExpiration(Date.from(Instant.now().plusMillis(jwtExpirationInMillis))).compact();
+  }
 }

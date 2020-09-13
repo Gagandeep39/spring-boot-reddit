@@ -9,9 +9,11 @@ package com.gagan.redditclone.controller;
 
 import com.gagan.redditclone.dto.AuthenticationResponse;
 import com.gagan.redditclone.dto.LoginRequest;
+import com.gagan.redditclone.dto.RefreshTokenRequest;
 import com.gagan.redditclone.dto.RegisterRequest;
 import com.gagan.redditclone.service.AuthService;
 
+import com.gagan.redditclone.service.RefreshTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +31,7 @@ import lombok.AllArgsConstructor;
 public class AuthController {
 
   private final AuthService authService;
+  private final RefreshTokenService refreshTokenService;
 
   @PostMapping("/signup")
   public ResponseEntity<String> signUp(@RequestBody RegisterRequest registerRequest) {
@@ -46,6 +49,17 @@ public class AuthController {
   public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
     AuthenticationResponse response = authService.login(loginRequest);
     return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  @PostMapping("/refresh/token")
+  public ResponseEntity<AuthenticationResponse> refreshTokens(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+    return ResponseEntity.status(HttpStatus.OK).body(authService.refreshToken(refreshTokenRequest));
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<String> logout(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+    refreshTokenService.deleteRefreshToken(refreshTokenRequest.getRefreshToken());
+    return ResponseEntity.status(HttpStatus.OK).body("Refresh Token Deleted Successfully!!");
   }
 
 }
