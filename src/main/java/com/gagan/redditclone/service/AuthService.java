@@ -4,8 +4,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.transaction.Transactional;
-
 import com.gagan.redditclone.dto.AuthenticationResponse;
 import com.gagan.redditclone.dto.LoginRequest;
 import com.gagan.redditclone.dto.RegisterRequest;
@@ -21,8 +19,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.AllArgsConstructor;
 
@@ -92,6 +92,13 @@ public class AuthService {
     SecurityContextHolder.getContext().setAuthentication(authentication);
     String token = jwtProvider.generateToken(authentication);
     return new AuthenticationResponse(loginRequest.getUsername(), token);
+  }
+
+  @Transactional(readOnly = true)
+  public User getCurrentUser() {
+    UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    return userRepository.findByUsername(principal.getUsername())
+        .orElseThrow(() -> new SpringRedditException("User name not found - " + principal.getUsername().toString()));
   }
 
 }
