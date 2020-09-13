@@ -1,0 +1,115 @@
+### Registration
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@mail.com",
+  "username": "Test",
+  "password": "123456"
+}
+
+### Account verification
+GET http://localhost:8080/api/auth/accountVerification/9ea6ac69-e89d-4685-a745-0d35934c5238
+
+### Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "Test",
+  "password": "123456"
+}
+
+### Create Subreddit
+
+POST http://localhost:8080/api/subreddit
+Authorization: [Token after logging in]
+Content-Type: application/json
+
+{
+  "name": "Test topic 3",
+  "description": "Test Description"
+}
+
+### Fetch All subreddits
+GET http://localhost:8080/api/subreddit
+Authorization: [Token after logging in]
+
+### Fetch All subreddits
+GET http://localhost:8080/api/subreddit/1
+Authorization: [Token after logging in]
+
+### Create Post
+POST http://localhost:8080/api/posts
+Authorization: [Token after logging in]
+Content-Type: application/json
+
+{
+  "subredditName": "Test topic",
+  "postName": "postName 1",
+  "url": "url",
+  "description": "description"
+}
+
+### Fetch all posts
+GET http://localhost:8080/api/posts
+Authorization: [Token after logging in]
+
+### Fetch Post by ID
+GET http://localhost:8080/api/posts/1
+Authorization: [Token after logging in]
+
+### Fetch all posts by subreddit
+GET http://localhost:8080/api/posts/by-subreddit/1
+Authorization: [Token after logging in]
+
+### Fetch all posts by username
+GET http://localhost:8080/api/posts/by-user/Test
+Authorization: [Token after logging in]
+
+### Create post
+POST http://localhost:8080/api/comments
+Authorization: [Token after logging in]
+Content-Type: application/json
+
+{
+  "postId": 1,
+  "text": "First Comment"
+}
+
+### Fetch Post By ID
+GET http://localhost:8080/api/comments/by-postId/1
+Authorization: [Token after logging in]
+
+### Fetch Post By Username
+GET http://localhost:8080/api/comments/by-user/Test
+Authorization: [Token after logging in]
+
+### Fetch Post By Username
+POST http://localhost:8080/api/votes
+Authorization: [Token after logging in]
+Content-Type: application/json
+
+{
+    "voteType": "DOWNVOTE",
+  "postId" : 1
+}
+
+### Refresh token
+POST http://localhost:8080/api/auth/refresh/token
+Content-Type: application/json
+
+{
+"username": "Test",
+  "refreshToken": "9082e0c0-c5a5-4abd-b4e4-09ece0717e4d"
+}
+
+### Logout
+POST http://localhost:8080/api/auth/logout
+Authorization: [Token after logging in]
+Content-Type: application/json
+
+{
+"username": "Test",
+  "refreshToken": "9082e0c0-c5a5-4abd-b4e4-09ece0717e4d"
+}
